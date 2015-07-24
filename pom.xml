@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+		<groupId>io.hawt</groupId>
+		<artifactId>project</artifactId>
+		<version>2.0.0</version>
+	</parent>
+
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>hawtio-deb</artifactId>
+	<packaging>deb</packaging>
+	<name>${project.artifactId}</name>
+	<description>hawtio :: hawtio-deb</description>
+
+	<properties>
+
+		<hawtio.version>${project.version}</hawtio.version>
+
+		<!-- Properties used for building DEB packages -->
+		<service.name>hawtio</service.name>
+		<appName>hawtio</appName>
+		<packaging.home.dir>/usr/share/${appName}</packaging.home.dir>
+		<packaging.bin.dir>/usr/share/${appName}/bin</packaging.bin.dir>
+		<packaging.conf.dir>/etc/${appName}</packaging.conf.dir>
+		<packaging.data.dir>/var/lib/${appName}</packaging.data.dir>
+		<packaging.user>${appName}</packaging.user>
+		<packaging.group>${appName}</packaging.group>
+		<packaging.log.dir>/var/log/${appName}</packaging.log.dir>
+		<packaging.pid.dir>/var/run/${appName}</packaging.pid.dir>
+		<packaging.systemd.dir>/usr/lib/systemd/system</packaging.systemd.dir>
+		<packaging.systemd.sysctl.dir>/usr/lib/sysctl.d</packaging.systemd.sysctl.dir>
+		<packaging.tmpfilesd.dir>/usr/lib/tmpfiles.d</packaging.tmpfilesd.dir>
+
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>io.hawt</groupId>
+			<artifactId>hawtio-app</artifactId>
+			<version>${hawtio.version}</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<extensions>
+			<!-- Add support for the "deb" packaging -->
+			<extension>
+				<groupId>org.vafer</groupId>
+				<artifactId>jdeb</artifactId>
+				<version>1.4</version>
+			</extension>
+		</extensions>
+		<pluginManagement>
+			<plugins>
+				<!-- Make Debian package -->
+				<plugin>
+					<groupId>org.vafer</groupId>
+					<artifactId>jdeb</artifactId>
+					<configuration>
+						<controlDir>${project.build.directory}/deb-src/control</controlDir>
+						<!-- "all" classifier is required for nexus-apt-plugin to work -->
+						<deb>${project.build.directory}/${appName}-${hawtio.version}-all.deb</deb>
+					</configuration>
+					<executions>
+						<execution>
+							<phase>package</phase>
+							<goals>
+								<goal>jdeb</goal>
+							</goals>
+							<configuration>
+								<dataSet>
+									<!-- Add bin directory/script -->
+									<data>
+										<src>${project.build.directory}/bin/${appName}</src>
+										<dst>${appName}</dst>
+										<type>file</type>
+										<mapper>
+											<type>perm</type>
+											<prefix>${packaging.bin.dir}</prefix>
+											<filemode>755</filemode>
+											<user>root</user>
+											<group>root</group>
+										</mapper>
+									</data>
+									<data>
+										<src>${project.build.directory}/bin/${appName}.in.sh</src>
+										<dst>${appName}.in.sh</dst>
+										<type>file</type>
+										<mapper>
+											<type>perm</type>
+											<prefix>${packaging.bin.dir}</prefix>
+											<filemode>755</filemode>
+											<user>root</user>
+											<group>root</group>
+										</mapper>
+									</data>
+									<!-- Add libs -->
+									<data>
+										<src>${project.build.directory}/</src>
+										<includes>${project.build.finalName}.${project.packaging}</includes>
+										<type>directory</type>
+										<mapper>
+											<type>perm</type>
+											<prefix>${packaging.home.dir}/lib</prefix>
+											<user>root</user>
+											<group>root</group>
+										</mapper>
+									</data>
+									<!-- Add configuration files -->
+									<data>
+										<src>${project.build.directory}/conf</src>
+										<type>directory</type>
+										<mapper>
+											<type>perm</type>
+											<prefix>${packaging.conf.dir}</prefix>
+											<user>root</user>
+											<group>root</group>
+										</mapper>
+									</data>
+									<!-- Add environment vars file -->
+									<data>
+										<src>${project.build.directory}/deb-src/default/${appName}</src>
+										<dst>${appName}</dst>
+										<type>file</type>
+										<mapper>
+											<type>perm</type>
+											<prefix>/etc/default</prefix>
+											<user>root</user>
+											<group>root</group>
+										</mapper>
+									</data>
+									<!-- Add init.d files -->
+									<data>
+										<src>${project.build.directory}/deb-src/init.d/${appName}</src>
+										<dst>${appName}</dst>
+										<type>file</type>
+										<mapper>
+											<type>perm</type>
+											<prefix>/etc/init.d</prefix>
+											<filemode>755</filemode>
+											<user>root</user>
+											<group>root</group>
+										</mapper>
+									</data>
+									<!-- Adds systemd file -->
+									<data>
+										<src>${project.build.directory}/deb-src/systemd/${appName}.service</src>
+										<dst>/usr/lib/systemd/system/${appName}.service</dst>
+										<type>file</type>
+									</data>
+									<!-- Adds systemd/sysctl.d configuration file -->
+									<data>
+										<src>${project.build.directory}/deb-src/systemd/sysctl.d/${appName}.conf</src>
+										<dst>/usr/lib/sysctl.d/${appName}.conf</dst>
+										<type>file</type>
+									</data>
+									<!-- Adds systemd/tmpfiles.d configuration file -->
+									<data>
+										<src>${project.build.directory}/deb-src/systemd/${appName}.conf</src>
+										<dst>/usr/lib/tmpfiles.d/${appName}.conf</dst>
+										<type>file</type>
+									</data>
+
+									<!-- Add lintian files -->
+									<data>
+										<src>${project.build.directory}/deb-src/lintian/${appName}</src>
+										<dst>${appName}</dst>
+										<type>file</type>
+										<mapper>
+											<type>perm</type>
+											<prefix>/usr/share/lintian/overrides</prefix>
+											<user>root</user>
+											<group>root</group>
+										</mapper>
+									</data>
+
+									<!-- Adds and sets permission on default directories -->
+									<data>
+										<type>template</type>
+										<paths>
+											<path>${packaging.data.dir}</path>
+											<path>${packaging.data.dir}/temp</path>
+											<path>${packaging.data.dir}/repository</path>
+											<path>${packaging.log.dir}</path>
+											<path>${packaging.pid.dir}</path>
+										</paths>
+										<mapper>
+											<type>perm</type>
+											<dirmode>755</dirmode>
+											<user>${packaging.user}</user>
+											<group>${packaging.group}</group>
+										</mapper>
+									</data>
+								</dataSet>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+		<plugins>
+			<!-- Prepare archive package -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-bin-resources</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/bin</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.basedir}/src/main/bin</directory>
+									<filtering>true</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-conf-resources</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/conf</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.basedir}/src/main/resources/</directory>
+									<filtering>true</filtering>
+									<includes>
+										<include>${appName}.conf</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<!-- Prepare Debian package -->
+					<execution>
+						<id>copy-deb-resources</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/deb-src</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.basedir}/src/main/deb</directory>
+									<filtering>true</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

@@ -1,0 +1,72 @@
+#!/bin/sh
+#
+# This script is executed in the post-installation phase
+#
+#   On Debian,
+#       $1=configure : is set to 'configure' and if $2 is set, it is an upgrade
+#
+set -e
+
+# Run ${appName} as this user ID and group ID
+APP_USER=${packaging.user}
+APP_GROUP=${packaging.group}
+
+# Source the default env file
+APP_ENV_FILE="/etc/default/${appName}"
+if [ -f "$APP_ENV_FILE" ]; then
+    . "$APP_ENV_FILE"
+fi
+
+IS_UPGRADE=false
+
+case "$1" in
+
+    # Debian ####################################################
+    configure)
+
+        # If $1=configure and $2 is set, this is an upgrade
+        if [ -n $2 ]; then
+            IS_UPGRADE=true
+        fi
+    ;;
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+	*)
+        echo "post install script called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+if [ "x$IS_UPGRADE" != "xtrue" ]; then
+    if command -v systemctl >/dev/null; then
+        echo "### NOT starting on installation, please execute the following statements to configure ${appName} service to start automatically using systemd"
+        echo " sudo systemctl daemon-reload"
+        echo " sudo systemctl enable ${appName}.service"
+        echo "### You can start ${appName} service by executing"
+        echo " sudo systemctl start ${appName}.service"
+    elif command -v update-rc.d >/dev/null; then
+        echo "### NOT starting on installation, please execute the following statements to configure ${appName} service to start automatically using System-V "
+        echo " sudo update-rc.d ${appName} defaults 95 10"
+        echo "### You can start ${appName} service by executing"
+        echo " sudo /etc/init.d/${appName} start"
+    fi
+elif [ "$RESTART_ON_UPGRADE" = "true" ]; then
+
+    echo -n "Restarting ${appName} service..."
+    if command -v systemctl >/dev/null; then
+        systemctl daemon-reload
+        systemctl restart ${appName}.service || true
+
+    elif [ -x /etc/init.d/${appName} ]; then
+        if command -v invoke-rc.d >/dev/null; then
+            invoke-rc.d ${appName} stop || true
+            invoke-rc.d ${appName} start || true
+        else
+            /etc/init.d/${appName} restart || true
+        fi
+    fi
+    echo " OK"
+fi
+
+# vi:ai sw=4 ts=4 tw=0 et

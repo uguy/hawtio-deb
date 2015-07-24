@@ -1,0 +1,59 @@
+#!/bin/sh
+#
+# This script is executed in the pre-remove phase
+#
+#   On Debian,
+#       $1=remove    : indicates a removal
+#       $1=upgrade   : indicates an upgrade
+#
+set -e
+
+# Run ${appName} as this user ID and group ID
+APP_USER=${packaging.user}
+APP_GROUP=${packaging.group}
+
+# Source the default env file
+APP_ENV_FILE="/etc/default/${appName}"
+if [ -f "$APP_ENV_FILE" ]; then
+    . "$APP_ENV_FILE"
+fi
+
+STOP_REQUIRED=false
+
+case "$1" in
+
+    # Debian ####################################################
+    remove)
+        STOP_REQUIRED=true
+    ;;
+    upgrade)
+        if [ "$RESTART_ON_UPGRADE" = "true" ]; then
+            STOP_REQUIRED=true
+        fi
+    ;;
+    deconfigure|failed-upgrade)
+    ;;
+
+    *)
+        echo "pre remove script called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+# Stops the service
+if [ "$STOP_REQUIRED" = "true" ]; then
+    echo -n "Stopping ${appName} service..."
+    if command -v systemctl >/dev/null; then
+        systemctl --no-reload stop ${appName}.service > /dev/null 2>&1 || true
+
+    elif [ -x /etc/init.d/${appName} ]; then
+        if command -v invoke-rc.d >/dev/null; then
+            invoke-rc.d ${appName} stop || true
+        else
+            /etc/init.d/${appName} stop || true
+        fi
+	fi
+    echo " OK"
+fi
+
+# vi:ai sw=4 ts=4 tw=0 et

@@ -1,0 +1,37 @@
+#
+# Environment file for ${appName}
+#
+
+HAWTIO_USER=${packaging.user}
+HAWTIO_GROUP=${packaging.group}
+
+HAWTIO_JAVA_OPTS=""
+
+# Hawtio log directory
+LOG_DIR=${packaging.log.dir}
+
+# Hawtio PID directory
+PID_DIR=${packaging.pid.dir}
+
+# Hawtio PID file
+PID_FILE=${packaging.pid.dir}/${appName}.pid
+
+# Java memory OPTS
+# Heap size min/max defaults to 512m min, 1g max
+#HAWTIO_MIN_MEM=512m
+#HAWTIO_MAX_MEM=1g
+# HAWTIO_HEAP_SIZE set the same value to both Xmx and Xms
+# Set HAWTIO_HEAP_SIZE to 50% of available RAM, but no more than 31g
+HAWTIO_HEAP_SIZE=1g
+
+# Heap new generation
+#HAWTIO_HEAP_NEWSIZE=
+
+# Maximum direct memory
+#HAWTIO_DIRECT_SIZE=
+
+# Uncomment to log GC activity
+#HAWTIO_USE_GC_LOGGING=true
+# Path to the GC log file
+#HAWTIO_GC_LOG_FILE=${packaging.log.dir}/gc.log
+

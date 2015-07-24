@@ -1,0 +1,11 @@
+Package: ${appName}
+Version: ${hawtio.version}
+Architecture: all
+Distribution: trusty
+Maintainer: Hawtio
+Homepage: http://hawt.io
+Depends: libc6, adduser
+Section: web
+Priority: optional
+Description: ${project.description}
+ ${appName} is a modular web console for managing your Java stuff

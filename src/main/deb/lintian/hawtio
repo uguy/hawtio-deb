@@ -1,0 +1,8 @@
+# Ignore arch dependent warnings, we chose the right libs on start
+${appName} binary: arch-independent-package-contains-binary-or-object
+# Not stripping external libraries
+${appName} binary: unstripped-binary-or-object
+# Ignore arch dependent warnings, we chose the right libs on start
+${appName} binary: arch-dependent-file-in-usr-share
+# Changelog upon request
+${appName} binary: changelog-file-missing-in-native-package

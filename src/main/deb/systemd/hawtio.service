@@ -1,0 +1,37 @@
+[Unit]
+Description=Starts and stops a single ${appName} instance on this system
+Documentation=http://hawt.io
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Environment=APP_HOME=${packaging.home.dir}
+Environment=CONF_DIR=${packaging.conf.dir}
+Environment=CONF_FILE=${packaging.conf.dir}/${appName}.conf
+Environment=DATA_DIR=${packaging.data.dir}
+Environment=LOG_DIR=${packaging.log.dir}
+Environment=PID_DIR=${packaging.pid.dir}
+Environment=PIDFile=${packaging.pid.dir}/${appName}.pid
+EnvironmentFile=/etc/default/${appName}
+
+User=${packaging.user}
+Group=${packaging.group}
+
+ExecStart=${packaging.bin.dir}/${appName} -p ${packaging.pid.dir}/${appName}.pid -d
+
+# Connects standard output to /dev/null
+StandardOutput=null
+
+# Connects standard error to journal
+StandardError=journal
+
+# When a JVM receives a SIGTERM signal it exits with code 143
+SuccessExitStatus=143
+
+# Shutdown delay in seconds, before process is tried to be killed with KILL (if configured)
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target
+
+# Built for ${project.name}-${project.version}

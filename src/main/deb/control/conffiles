@@ -1,0 +1,4 @@
+/etc/default/${appName}
+${packaging.conf.dir}/${appName}.conf
+/etc/init.d/${appName}
+${packaging.systemd.dir}/${appName}.service

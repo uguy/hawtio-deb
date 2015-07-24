@@ -1,0 +1,55 @@
+#!/bin/sh
+#
+# This script is executed in the pre-installation phase
+#
+#   On Debian,
+#       $1=install : indicates an new install
+#       $1=upgrade : indicates an upgrade
+#
+set -e
+
+# Run ${appName} as this user ID and group ID
+APP_USER=${packaging.user}
+APP_GROUP=${packaging.group}
+
+# Source the default env file
+APP_ENV_FILE="/etc/default/${appName}"
+if [ -f "$APP_ENV_FILE" ]; then
+    . "$APP_ENV_FILE"
+fi
+
+case "$1" in
+
+    # Debian ####################################################
+    install|upgrade)
+
+        # Create ${appName} group if not existing
+        if ! getent group "$APP_GROUP" > /dev/null 2>&1 ; then
+            echo -n "Creating $APP_GROUP group..."
+            addgroup --quiet --system "$APP_GROUP"
+            echo " OK"
+        fi
+
+        # Create ${appName} user if not existing
+        if ! id $APP_USER > /dev/null 2>&1 ; then
+            echo -n "Creating $APP_USER user..."
+            adduser --quiet \
+                    --system \
+                    --no-create-home \
+                    --ingroup "$APP_GROUP" \
+                    --disabled-password \
+                    --shell /bin/false \
+                    "$APP_USER"
+            echo " OK"
+        fi
+    ;;
+    abort-deconfigure|abort-upgrade|abort-remove)
+    ;;
+
+    *)
+        echo "pre install script called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+# vi:ai sw=4 ts=4 tw=0 et
